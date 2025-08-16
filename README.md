@@ -1,0 +1,2 @@
+# G-mobil
+Mobil uygulama
