@@ -1,0 +1,79 @@
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Geçici bellek veritabanı (ileride MongoDB ile değişecek)
+let users = [];
+let contacts = [
+    { id: 1, name: "Ahmet Yılmaz", phone: "555-1234", userId: 1 },
+    { id: 2, name: "Mehmet Demir", phone: "555-5678", userId: 1 }
+];
+let messages = [];
+
+// Routes
+app.get('/', (req, res) => {
+    res.json({ message: "GKC MOBİL API - Çalışıyor!" });
+});
+
+// Kullanıcı kayıt
+app.post('/api/auth/register', (req, res) => {
+    const { username, password } = req.body;
+    const user = { id: Date.now(), username, password };
+    users.push(user);
+    res.json({ success: true, user: { id: user.id, username: user.username } });
+});
+
+// Kullanıcı giriş
+app.post('/api/auth/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) {
+        res.json({ success: true, user: { id: user.id, username: user.username } });
+    } else {
+        res.status(401).json({ success: false, message: "Geçersiz kullanıcı adı veya şifre" });
+    }
+});
+
+// Kişi listesi
+app.get('/api/contacts', (req, res) => {
+    res.json(contacts);
+});
+
+// Kişi ekle
+app.post('/api/contacts', (req, res) => {
+    const { name, phone } = req.body;
+    const contact = { id: Date.now(), name, phone, userId: 1 };
+    contacts.push(contact);
+    res.json(contact);
+});
+
+// Mesaj gönder
+app.post('/api/messages', (req, res) => {
+    const { contactId, text } = req.body;
+    const message = {
+        id: Date.now(),
+        contactId,
+        text,
+        timestamp: new Date(),
+        sent: true
+    };
+    messages.push(message);
+    res.json(message);
+});
+
+// Mesaj listesi
+app.get('/api/messages/:contactId', (req, res) => {
+    const contactMessages = messages.filter(msg => 
+        msg.contactId == req.params.contactId
+    );
+    res.json(contactMessages);
+});
+
+app.listen(PORT, () => {
+    console.log(`Server çalışıyor: http://localhost:${PORT}`);
+});
